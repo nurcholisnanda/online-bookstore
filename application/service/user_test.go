@@ -117,7 +117,7 @@ func Test_userService_Login(t *testing.T) {
 		}
 	}
 	req := seedLoginReq()
-	user := seedUser()
+	userMock := seedUser()
 	signedToken := "anytoken"
 
 	type args struct {
@@ -166,17 +166,31 @@ func Test_userService_Login(t *testing.T) {
 			want:    "",
 			wantErr: true,
 		},
+		{
+			name: "fail wrong password",
+			s: &userService{
+				auth:     mockAuth,
+				userRepo: mockRepo,
+			},
+			args: args{
+				req: req,
+			},
+			want:    "",
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			switch tt.name {
 			case "success login account":
-				mockFindUserByEmail(user, nil)(mockRepo)
+				mockFindUserByEmail(userMock, nil)(mockRepo)
 				mockCreateAccessToken(signedToken, nil)(mockAuth)
 			case "fail find user":
 				mockFindUserByEmail(nil, errors.New("any error"))(mockRepo)
+			case "fail wrong password":
+				mockFindUserByEmail(&user.User{}, nil)(mockRepo)
 			case "fail create token":
-				mockFindUserByEmail(user, nil)(mockRepo)
+				mockFindUserByEmail(userMock, nil)(mockRepo)
 				mockCreateAccessToken("", errors.New("any error"))(mockAuth)
 			}
 			got, err := tt.s.Login(tt.args.req)

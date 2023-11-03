@@ -49,10 +49,10 @@ func (mr *MockAuthenticationMockRecorder) CreateAccessToken(arg0 interface{}) *g
 }
 
 // ValidateToken mocks base method.
-func (m *MockAuthentication) ValidateToken(arg0 string) (int, error) {
+func (m *MockAuthentication) ValidateToken(arg0 string) (uint, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidateToken", arg0)
-	ret0, _ := ret[0].(int)
+	ret0, _ := ret[0].(uint)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

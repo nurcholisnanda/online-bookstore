@@ -92,8 +92,15 @@ func Test_orderService_MakeOrder(t *testing.T) {
 				orderRepo: mockOrder,
 			},
 			args: args{
-				req:    &dto.OrderRequest{},
-				userID: 0,
+				req: &dto.OrderRequest{
+					OrderItems: []dto.OrderItemRequest{
+						{
+							BookID:   3,
+							Quantity: 3,
+						},
+					},
+				},
+				userID: 1,
 			},
 			wantErr: true,
 		},
@@ -136,9 +143,9 @@ func Test_orderService_GetOrderHistory(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockBook := mock_book.NewMockRepository(ctrl)
 	mockOrder := mock_order.NewMockRepository(ctrl)
-	findUserOrderHistoryRecord := func(orders []order.Order, err error) func(m *mock_book.MockRepository) {
-		return func(m *mock_book.MockRepository) {
-			m.EXPECT().GetBooksByIDs(gomock.Any()).Return(orders, err)
+	findUserOrderHistoryRecord := func(orders []order.Order, err error) func(m *mock_order.MockRepository) {
+		return func(m *mock_order.MockRepository) {
+			m.EXPECT().FindUserOrderHistory(gomock.Any()).Return(orders, err)
 		}
 	}
 	userID := 1
@@ -169,7 +176,7 @@ func Test_orderService_GetOrderHistory(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch tt.name {
 			case "success get order history":
-				findUserOrderHistoryRecord(orders, nil)(mockBook)
+				findUserOrderHistoryRecord(orders, nil)(mockOrder)
 			}
 			gotRes, err := tt.s.GetOrderHistory(tt.args.userID)
 			if (err != nil) != tt.wantErr {

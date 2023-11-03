@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"reflect"
 	"testing"
 
@@ -94,13 +93,6 @@ func Test_authClient_ValidateToken(t *testing.T) {
 	type args struct {
 		requestToken string
 	}
-	userID := 1
-	secret := "test secret"
-	client := &authClient{
-		secret: secret,
-	}
-	validToken, _ := client.CreateAccessToken(uint(userID))
-
 	ctrl := gomock.NewController(t)
 	mockRepo := mock.NewMockRepository(ctrl)
 	findUserByEmailRecord := func(user *user.User, err error) func(m *mock.MockRepository) {
@@ -108,17 +100,26 @@ func Test_authClient_ValidateToken(t *testing.T) {
 			m.EXPECT().FindUserByID(gomock.Any()).Return(user, err)
 		}
 	}
+	var userID uint = 1
+	secret := "test secret"
+	client := &authClient{
+		secret: secret,
+	}
+	validToken, _ := client.CreateAccessToken(uint(userID))
 
 	tests := []struct {
 		name    string
 		c       *authClient
 		args    args
-		want    int
+		want    uint
 		wantErr bool
 	}{
 		{
 			name: "success validating token",
-			c:    client,
+			c: &authClient{
+				secret:   secret,
+				userRepo: mockRepo,
+			},
 			args: args{
 				requestToken: validToken,
 			},
@@ -140,8 +141,6 @@ func Test_authClient_ValidateToken(t *testing.T) {
 			switch tt.name {
 			case "success validating token":
 				findUserByEmailRecord(nil, nil)(mockRepo)
-			case "error find user":
-				findUserByEmailRecord(nil, errors.New("any error"))(mockRepo)
 			}
 			got, err := tt.c.ValidateToken(tt.args.requestToken)
 			if (err != nil) != tt.wantErr {

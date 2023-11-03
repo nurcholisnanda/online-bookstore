@@ -25,7 +25,7 @@ type authClient struct {
 //go:generate mockgen -source=auth.go -destination=mock/auth.go -package=mock
 type Authentication interface {
 	CreateAccessToken(uint) (string, error)
-	ValidateToken(string) (int, error)
+	ValidateToken(string) (uint, error)
 }
 
 // NewClient returns a wrapper around authentication client.
@@ -54,7 +54,7 @@ func (c *authClient) CreateAccessToken(userID uint) (accessToken string, err err
 	return t, err
 }
 
-func (c *authClient) ValidateToken(requestToken string) (int, error) {
+func (c *authClient) ValidateToken(requestToken string) (uint, error) {
 	token, err := jwt.Parse(requestToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -67,7 +67,7 @@ func (c *authClient) ValidateToken(requestToken string) (int, error) {
 	}
 
 	// assert jwt.MapClaims type
-	claims, ok := token.Claims.(*jwt.RegisteredClaims)
+	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		return 0, errClaimingToken
 	}
@@ -76,12 +76,13 @@ func (c *authClient) ValidateToken(requestToken string) (int, error) {
 		return 0, errInvalidToken
 	}
 
-	currentTime := time.Now().UTC()
+	currentTime := time.Now().UTC().Unix()
+	fmt.Println(claims["exp"])
 	if ok := claims.VerifyExpiresAt(currentTime, true); !ok {
 		return 0, errTokenExpired
 	}
 
-	userID, err := strconv.Atoi(claims.Subject)
+	userID, err := strconv.Atoi(claims["sub"].(string))
 	if err != nil {
 		return 0, err
 	}
@@ -92,5 +93,5 @@ func (c *authClient) ValidateToken(requestToken string) (int, error) {
 		return 0, err
 	}
 
-	return userID, nil
+	return uint(userID), nil
 }

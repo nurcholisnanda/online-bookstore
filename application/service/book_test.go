@@ -73,7 +73,7 @@ func Test_bookService_GetBooks(t *testing.T) {
 			s: &bookService{
 				bookRepo: mockRepo,
 			},
-			want:    res,
+			want:    nil,
 			wantErr: true,
 		},
 	}
