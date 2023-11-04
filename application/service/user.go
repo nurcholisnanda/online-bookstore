@@ -15,11 +15,13 @@ type userService struct {
 	userRepo user.Repository
 }
 
+//go:generate mockgen -source=user.go -destination=mock/user.go -package=mock
 type UserService interface {
 	Register(*dto.UserRequest) error
 	Login(*dto.LoginRequest) (string, error)
 }
 
+// User service constructor
 func NewUserService(auth Authentication, userRepo user.Repository) UserService {
 	return &userService{
 		auth:     auth,
@@ -27,7 +29,10 @@ func NewUserService(auth Authentication, userRepo user.Repository) UserService {
 	}
 }
 
+// Register service will hashed password and call InsertUser
+// in our user repository contract
 func (s *userService) Register(req *dto.UserRequest) error {
+	//hashing password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -45,6 +50,9 @@ func (s *userService) Register(req *dto.UserRequest) error {
 	return nil
 }
 
+// Login service will check whether email in login request is exist.
+// Moreover, will create access token if the user is exist
+// and password request is correct.
 func (s *userService) Login(req *dto.LoginRequest) (string, error) {
 	user, err := s.userRepo.FindUserByEmail(req.Email)
 	if err != nil {

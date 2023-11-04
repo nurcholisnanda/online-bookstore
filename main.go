@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -14,12 +15,14 @@ import (
 )
 
 func init() {
+	// Load our env variables from .env
 	if err := godotenv.Load(); err != nil {
 		log.Panic("No env gotten")
 	}
 }
 
 func main() {
+	//setup database
 	db, err := persistence.NewDatabase()
 	if err != nil {
 		log.Panic(err)
@@ -35,13 +38,14 @@ func main() {
 		})
 	})
 
+	//setup group routers
 	v := r.Group("/v1")
-
 	user.AddUserRoutes(v, gormDB)
 	book.AddBookRoutes(v, gormDB)
 	order.AddOrderRoutes(v, gormDB)
 
-	if err = r.Run(":8080"); err != nil {
+	port := os.Getenv("LOCAL_PORT")
+	if err = r.Run(":" + port); err != nil {
 		log.Panic(err)
 	}
 }

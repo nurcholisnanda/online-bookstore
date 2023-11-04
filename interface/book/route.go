@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// Setup Book router group
 func AddBookRoutes(rg *gin.RouterGroup, db *gorm.DB) {
 	ctr := NewController(service.NewBookService(repository.NewBookRepositoryImpl(db)))
 

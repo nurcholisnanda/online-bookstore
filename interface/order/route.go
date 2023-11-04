@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// Setup Order router group
 func AddOrderRoutes(rg *gin.RouterGroup, db *gorm.DB) {
 	m := middleware.NewMiddleware(service.NewAuthClient(
 		os.Getenv("JWT_SECRET"), repository.NewUserRepositoryImpl(db),

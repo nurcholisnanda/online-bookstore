@@ -18,13 +18,14 @@ var (
 	errInvalidToken        = "access token is invalid"
 )
 
-// NewMiddleware returns a wrapper around middleware client.
+// Middleware constructor.
 func NewMiddleware(auth service.Authentication) *Middleware {
 	return &Middleware{
 		auth: auth,
 	}
 }
 
+// Authenticate function to check whether the user is authorized
 func (m *Middleware) Authenticate() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tokenStr := ctx.GetHeader("Authorization")

@@ -2,7 +2,7 @@ package book
 
 import "gorm.io/gorm"
 
-// Define the Costumer entity
+// Define Book Struct
 type Book struct {
 	gorm.Model
 	Author string `gorm:"not null"`

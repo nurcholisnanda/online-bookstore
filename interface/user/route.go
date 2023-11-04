@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// Setup User router group
 func AddUserRoutes(rg *gin.RouterGroup, db *gorm.DB) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	userRepo := repository.NewUserRepositoryImpl(db)

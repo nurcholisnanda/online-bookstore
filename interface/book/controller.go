@@ -12,12 +12,15 @@ type Controller struct {
 	service service.BookService
 }
 
+// Book controller constructors
 func NewController(service service.BookService) *Controller {
 	return &Controller{
 		service: service,
 	}
 }
 
+// GetBooks function to call GetBooks service and return
+// books data as the response
 func (c *Controller) GetBooks(ctx *gin.Context) {
 	books, err := c.service.GetBooks()
 	if err != nil {

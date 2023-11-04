@@ -116,6 +116,57 @@ func Test_orderService_MakeOrder(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "error no order item",
+			s: &orderService{
+				bookRepo:  mockBook,
+				orderRepo: mockOrder,
+			},
+			args: args{
+				req: &dto.OrderRequest{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "error no qty order",
+			s: &orderService{
+				bookRepo:  mockBook,
+				orderRepo: mockOrder,
+			},
+			args: args{
+				req: &dto.OrderRequest{
+					OrderItems: []dto.OrderItemRequest{
+						{
+							BookID:   1,
+							Quantity: 0,
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "error ids not exist",
+			s: &orderService{
+				bookRepo:  mockBook,
+				orderRepo: mockOrder,
+			},
+			args: args{
+				req: &dto.OrderRequest{
+					OrderItems: []dto.OrderItemRequest{
+						{
+							BookID:   1,
+							Quantity: 1,
+						},
+						{
+							BookID:   20,
+							Quantity: 1,
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -128,6 +179,8 @@ func Test_orderService_MakeOrder(t *testing.T) {
 			case "success get book fail create order":
 				getBooksByIDsRecord(books, nil)(mockBook)
 				createOrderRecord(errors.New("any error"))(mockOrder)
+			case "error ids not exist":
+				getBooksByIDsRecord(books, nil)(mockBook)
 			}
 			if err := tt.s.MakeOrder(tt.args.req, tt.args.userID); (err != nil) != tt.wantErr {
 				t.Errorf("orderService.MakeOrder() error = %v, wantErr %v", err, tt.wantErr)
@@ -171,12 +224,26 @@ func Test_orderService_GetOrderHistory(t *testing.T) {
 			wantRes: res,
 			wantErr: false,
 		},
+		{
+			name: "fail get order history",
+			s: &orderService{
+				bookRepo:  mockBook,
+				orderRepo: mockOrder,
+			},
+			args: args{
+				userID: uint(userID),
+			},
+			wantRes: res,
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			switch tt.name {
 			case "success get order history":
 				findUserOrderHistoryRecord(orders, nil)(mockOrder)
+			case "fail get order history":
+				findUserOrderHistoryRecord(nil, errors.New("any error"))(mockOrder)
 			}
 			gotRes, err := tt.s.GetOrderHistory(tt.args.userID)
 			if (err != nil) != tt.wantErr {

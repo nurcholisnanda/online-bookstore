@@ -21,11 +21,13 @@ type orderService struct {
 	orderRepo order.Repository
 }
 
+//go:generate mockgen -source=order.go -destination=mock/order.go -package=mock
 type OrderService interface {
 	MakeOrder(*dto.OrderRequest, uint) error
 	GetOrderHistory(uint) ([]*dto.OrderHistory, error)
 }
 
+// Order service constructor
 func NewOrderService(bookRepo book.Repository, orderRepo order.Repository) OrderService {
 	return &orderService{
 		bookRepo:  bookRepo,
@@ -33,6 +35,8 @@ func NewOrderService(bookRepo book.Repository, orderRepo order.Repository) Order
 	}
 }
 
+// MakeOrder service will check whether book in order request is exist.
+// Moreover, will call CreateOrder repository contract.
 func (s *orderService) MakeOrder(req *dto.OrderRequest, userID uint) error {
 	orderReq := &order.Order{
 		UserID: userID,
@@ -59,12 +63,13 @@ func (s *orderService) MakeOrder(req *dto.OrderRequest, userID uint) error {
 		})
 	}
 
+	//check whether the books in order request exists in our database
 	books, err := s.bookRepo.GetBooksByIDs(bookIds)
 	if err != nil {
 		return err
 	}
 
-	// Check whether there are any Ids not exist in database
+	//check whether there are any Ids not exist in database
 	if len(books) != len(orderItems) {
 		notFoundIds := make([]string, 0)
 		for _, book := range books {
@@ -85,6 +90,9 @@ func (s *orderService) MakeOrder(req *dto.OrderRequest, userID uint) error {
 	return nil
 }
 
+// GetOrderHistory service will call FindUserOrderHistory in our repository
+// contract and return the response as OrderHistory dto to be controlled
+// in our order controller
 func (s *orderService) GetOrderHistory(userID uint) (res []*dto.OrderHistory, err error) {
 	orders, err := s.orderRepo.FindUserOrderHistory(userID)
 	if err != nil {

@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Define the Costumer struct
+// Define Order aggregate
 type Order struct {
 	gorm.Model
 	UserID     uint `gorm:"not null"`

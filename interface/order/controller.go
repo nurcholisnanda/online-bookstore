@@ -14,14 +14,17 @@ type Controller struct {
 	service service.OrderService
 }
 
+// Order controller constructor
 func NewController(service service.OrderService) *Controller {
 	return &Controller{
 		service: service,
 	}
 }
 
+// MakeOrder function to call MakeOrder service to add a new order
 func (c *Controller) MakeOrder(ctx *gin.Context) {
 	var req dto.OrderRequest
+	//get userID value using user_id key in our context from token
 	userID, found := ctx.Get("user_id")
 	if !found {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, dto.Response{
@@ -31,9 +34,9 @@ func (c *Controller) MakeOrder(ctx *gin.Context) {
 		return
 	}
 
-	err := ctx.ShouldBindJSON(&req)
+	err := ctx.BindJSON(&req)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, dto.Response{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, dto.Response{
 			Success: false,
 			Message: err.Error(),
 		})
@@ -55,7 +58,10 @@ func (c *Controller) MakeOrder(ctx *gin.Context) {
 	})
 }
 
+// GetOrderHistory function to call GetOrderHistory service
+// and return user order history data as the response
 func (c *Controller) GetOrderHistory(ctx *gin.Context) {
+	//get userID value using user_id key in our context from token
 	userID, found := ctx.Get("user_id")
 	if !found {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, dto.Response{

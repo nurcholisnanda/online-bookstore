@@ -28,7 +28,7 @@ type Authentication interface {
 	ValidateToken(string) (uint, error)
 }
 
-// NewClient returns a wrapper around authentication client.
+// Authentication client constructor
 func NewAuthClient(secret string, userRepo user.Repository) Authentication {
 	return &authClient{
 		secret:   secret,
@@ -36,11 +36,15 @@ func NewAuthClient(secret string, userRepo user.Repository) Authentication {
 	}
 }
 
+// CreateAccessToken will create access token that will be used for user authentication.
+// access token will be needed in API that needs user to be authorized
 func (c *authClient) CreateAccessToken(userID uint) (accessToken string, err error) {
 	if userID == 0 {
 		return "", errUserIDRequired
 	}
 	currentTime := time.Now().UTC()
+	//set token with criteria below and input userID into subject
+	//this will be needed to check which user is this token for
 	claims := &jwt.RegisteredClaims{
 		Subject:   strconv.Itoa(int(userID)),
 		ExpiresAt: jwt.NewNumericDate(currentTime.Add(time.Hour * 12)),
@@ -54,6 +58,9 @@ func (c *authClient) CreateAccessToken(userID uint) (accessToken string, err err
 	return t, err
 }
 
+// ValidateTokens will validate whether the token is valid
+// and will return user id if the user is exist in our database
+// otherwise it will return error
 func (c *authClient) ValidateToken(requestToken string) (uint, error) {
 	token, err := jwt.Parse(requestToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -77,11 +84,11 @@ func (c *authClient) ValidateToken(requestToken string) (uint, error) {
 	}
 
 	currentTime := time.Now().UTC().Unix()
-	fmt.Println(claims["exp"])
 	if ok := claims.VerifyExpiresAt(currentTime, true); !ok {
 		return 0, errTokenExpired
 	}
 
+	//claim our user id input in subject from token
 	userID, err := strconv.Atoi(claims["sub"].(string))
 	if err != nil {
 		return 0, err
